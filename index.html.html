@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>КБЖУ калькулятор</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --card: #1a1d24;
+    --card-border: #2a2e38;
+    --accent: #e0a940;
+    --text: #f2f2f2;
+    --text-dim: #9aa0ab;
+    --danger: #e05a5a;
+    --ok: #6fbf73;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f5f5f7;
+      --card: #ffffff;
+      --card-border: #e2e2e6;
+      --text: #1c1c1e;
+      --text-dim: #6b6b70;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  body {
+    padding: 20px 16px 32px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 1.5rem;
+    margin: 0 0 4px;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+  }
+  .sub {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    margin-bottom: 20px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .card h2 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin: 0 0 12px;
+  }
+  .row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .field {
+    flex: 1;
+    min-width: 0;
+  }
+  .field label {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+  input[type="number"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 10px 8px;
+    color: var(--text);
+    font-size: 1rem;
+    text-align: center;
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input:focus { outline: none; border-color: var(--accent); }
+  button {
+    width: 100%;
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #1a1407;
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--card-border);
+    margin-top: 8px;
+  }
+  .remaining-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    text-align: center;
+  }
+  .remaining-grid .item .val {
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+  .remaining-grid .item .lbl {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .val.neg { color: var(--danger); }
+  .val.pos { color: var(--text); }
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--bg);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 10px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.2s;
+  }
+  .progress-fill.over { background: var(--danger); }
+  details.card summary {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    cursor: pointer;
+    list-style: none;
+  }
+  details.card summary::-webkit-details-marker { display: none; }
+  details.card summary::before {
+    content: "▸ ";
+    color: var(--accent);
+  }
+  details[open].card summary::before {
+    content: "▾ ";
+  }
+  .ref-cat {
+    color: var(--accent);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 12px 0 4px;
+  }
+  .ref-cat:first-child { margin-top: 0; }
+  .ref-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 6px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .ref-item:active { background: var(--bg); }
+  .ref-item .name { font-size: 0.88rem; flex: 1; }
+  .ref-item .macros {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    text-align: right;
+    white-space: nowrap;
+    margin-left: 8px;
+  }
+  .footer-note {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.72rem;
+    margin-top: 16px;
+  }
+</style>
+</head>
+<body>
+
+  <h1>КБЖУ</h1>
+  <div class="sub">Вычитай по мере еды</div>
+
+  <div class="card">
+    <h2>Добавить приём пищи</h2>
+    <div class="row">
+      <div class="field">
+        <label>Ккал</label>
+        <input type="number" id="addCal" inputmode="decimal">
+      </div>
+      <div class="field">
+        <label>Белки</label>
+        <input type="number" id="addP" inputmode="decimal">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Жиры</label>
+        <input type="number" id="addF" inputmode="decimal">
+      </div>
+      <div class="field">
+        <label>Угли</label>
+        <input type="number" id="addC" inputmode="decimal">
+      </div>
+    </div>
+    <button class="btn-primary" id="addBtn">− Вычесть</button>
+  </div>
+
+  <div class="card">
+    <h2>Осталось</h2>
+    <div class="remaining-grid">
+      <div class="item">
+        <div class="val" id="remCal">0</div>
+        <div class="lbl">ккал</div>
+      </div>
+      <div class="item">
+        <div class="val" id="remP">0</div>
+        <div class="lbl">белки</div>
+      </div>
+      <div class="item">
+        <div class="val" id="remF">0</div>
+        <div class="lbl">жиры</div>
+      </div>
+      <div class="item">
+        <div class="val" id="remC">0</div>
+        <div class="lbl">угли</div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+    <button class="btn-secondary" id="resetBtn">Новый день</button>
+  </div>
+
+  <details class="card" id="normCard">
+    <summary>Дневная норма (менять редко)</summary>
+    <div class="row" style="margin-top:12px">
+      <div class="field">
+        <label>Ккал</label>
+        <input type="number" id="normCal" inputmode="decimal" placeholder="2000">
+      </div>
+      <div class="field">
+        <label>Белки</label>
+        <input type="number" id="normP" inputmode="decimal" placeholder="150">
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Жиры</label>
+        <input type="number" id="normF" inputmode="decimal" placeholder="60">
+      </div>
+      <div class="field">
+        <label>Угли</label>
+        <input type="number" id="normC" inputmode="decimal" placeholder="200">
+      </div>
+    </div>
+    <button class="btn-primary" id="setNormBtn">Поставить норму</button>
+  </details>
+
+  <details class="card" id="refCard">
+    <summary>Справочник продуктов (на 100 г)</summary>
+    <div style="margin-top:12px">
+      <input type="text" id="refSearch" placeholder="Поиск продукта..." style="width:100%;background:var(--bg);border:1px solid var(--card-border);border-radius:10px;padding:10px;color:var(--text);font-size:0.95rem;text-align:left;margin-bottom:10px;box-sizing:border-box;">
+      <div id="refList" style="max-height:340px;overflow-y:auto;"></div>
+      <div class="footer-note" style="margin-top:10px;text-align:left">По сырому весу. Мясо/рыба теряют ~25–30% при готовке, крупы и макароны прибавляют в 2–3 раза.</div>
+    </div>
+  </details>
+
+  <div class="footer-note">Данные хранятся только в этом браузере на этом устройстве</div>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'kbzhu_state_v1';
+
+  function safeGet() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+  function safeSet(data) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) { /* ignore */ }
+  }
+
+  let state = safeGet() || {
+    norm: { cal: 0, p: 0, f: 0, c: 0 },
+    remaining: { cal: 0, p: 0, f: 0, c: 0 }
+  };
+
+  const el = (id) => document.getElementById(id);
+
+  function render() {
+    const r = state.remaining;
+    el('remCal').textContent = Math.round(r.cal);
+    el('remP').textContent = Math.round(r.p);
+    el('remF').textContent = Math.round(r.f);
+    el('remC').textContent = Math.round(r.c);
+
+    [['remCal', r.cal], ['remP', r.p], ['remF', r.f], ['remC', r.c]].forEach(([id, v]) => {
+      el(id).classList.toggle('neg', v < 0);
+    });
+
+    const normCal = state.norm.cal || 1;
+    const usedPct = Math.max(0, Math.min(100, ((normCal - r.cal) / normCal) * 100));
+    const fill = el('progFill');
+    fill.style.width = usedPct + '%';
+    fill.classList.toggle('over', r.cal < 0);
+
+    el('normCal').value = state.norm.cal || '';
+    el('normP').value = state.norm.p || '';
+    el('normF').value = state.norm.f || '';
+    el('normC').value = state.norm.c || '';
+  }
+
+  el('setNormBtn').addEventListener('click', () => {
+    const cal = parseFloat(el('normCal').value) || 0;
+    const p = parseFloat(el('normP').value) || 0;
+    const f = parseFloat(el('normF').value) || 0;
+    const c = parseFloat(el('normC').value) || 0;
+    state.norm = { cal, p, f, c };
+    state.remaining = { cal, p, f, c };
+    safeSet(state);
+    render();
+  });
+
+  el('addBtn').addEventListener('click', () => {
+    const cal = parseFloat(el('addCal').value) || 0;
+    const p = parseFloat(el('addP').value) || 0;
+    const f = parseFloat(el('addF').value) || 0;
+    const c = parseFloat(el('addC').value) || 0;
+
+    state.remaining.cal -= cal;
+    state.remaining.p -= p;
+    state.remaining.f -= f;
+    state.remaining.c -= c;
+    safeSet(state);
+    render();
+
+    el('addCal').value = '';
+    el('addP').value = '';
+    el('addF').value = '';
+    el('addC').value = '';
+  });
+
+  el('resetBtn').addEventListener('click', () => {
+    state.remaining = { ...state.norm };
+    safeSet(state);
+    render();
+  });
+
+  render();
+
+  // --- Справочник продуктов ---
+  const FOODS = [
+    ["Мясо, птица, субпродукты", [
+      ["Куриное бедро (без кости/кожи)", 125, 19.0, 4.5, 0.0],
+      ["Куриные желудки", 98, 18.0, 2.2, 0.5],
+      ["Куриная печень", 138, 19.5, 6.0, 0.6],
+      ["Куриные сердечки", 155, 16.0, 10.0, 0.8],
+      ["Куриное филе (грудка)", 110, 23.0, 1.2, 0.0],
+      ["Индейка: филе (грудка)", 114, 23.7, 1.5, 0.0],
+      ["Индейка: бедро (без кожи)", 125, 20.0, 4.5, 0.0],
+      ["Индейка: фарш 93%", 150, 18.7, 8.3, 0.0],
+      ["Говядина (вырезка постная)", 135, 21.0, 5.0, 0.0],
+      ["Говяжья печень", 135, 20.4, 3.6, 3.9],
+      ["Говяжье сердце", 112, 17.7, 3.9, 0.1],
+      ["Свинина (вырезка постная)", 145, 20.0, 7.0, 0.0],
+      ["Кролик", 136, 20.1, 5.5, 0.0],
+    ]],
+    ["Овощи и грибы", [
+      ["Помидор обычный красный", 18, 0.9, 0.2, 3.9],
+      ["Помидор розовый (Бычье сердце)", 21, 1.0, 0.2, 4.4],
+      ["Помидор черри/коктейльный", 25, 1.2, 0.2, 5.5],
+      ["Помидор жёлтый/оранжевый", 17, 0.8, 0.2, 3.7],
+      ["Салат айсберг", 14, 0.9, 0.1, 3.0],
+      ["Огурцы", 15, 0.8, 0.1, 2.8],
+      ["Кабачки", 17, 0.6, 0.3, 3.1],
+      ["Шампиньоны", 22, 3.1, 0.3, 3.3],
+      ["Шпинат", 23, 2.9, 0.4, 3.6],
+      ["Капуста белокочанная", 25, 1.8, 0.1, 4.7],
+      ["Цветная капуста", 25, 2.0, 0.3, 5.0],
+      ["Баклажаны", 25, 1.0, 0.2, 5.9],
+      ["Тыква", 26, 1.0, 0.1, 6.5],
+      ["Болгарский перец", 27, 1.0, 0.2, 5.3],
+      ["Стручковая фасоль", 31, 1.8, 0.2, 7.0],
+      ["Брокколи", 34, 2.8, 0.4, 6.6],
+      ["Морковь", 38, 0.9, 0.2, 6.8],
+      ["Лук репчатый", 40, 1.1, 0.1, 8.2],
+      ["Свёкла", 43, 1.6, 0.2, 9.6],
+      ["Картофель", 77, 2.0, 0.1, 16.3],
+      ["Батат", 86, 1.6, 0.1, 20.1],
+      ["Кукуруза сладкая", 86, 3.3, 1.4, 19.0],
+    ]],
+    ["Фрукты и ягоды", [
+      ["Арбуз", 30, 0.6, 0.2, 7.6],
+      ["Клубника", 32, 0.7, 0.3, 5.7],
+      ["Грейпфрут", 35, 0.7, 0.1, 6.5],
+      ["Персики/нектарины", 42, 0.9, 0.2, 8.0],
+      ["Апельсины", 47, 0.9, 0.1, 9.4],
+      ["Голубика/черника", 48, 0.7, 0.3, 9.7],
+      ["Ананас", 50, 0.5, 0.1, 13.1],
+      ["Яблоки", 52, 0.3, 0.2, 11.4],
+      ["Малина", 52, 1.2, 0.7, 11.9],
+      ["Мандарины", 53, 0.8, 0.3, 13.3],
+      ["Груши", 57, 0.4, 0.1, 10.9],
+      ["Манго", 60, 0.8, 0.4, 15.0],
+      ["Киви", 61, 1.1, 0.5, 11.8],
+      ["Черешня", 63, 1.1, 0.2, 16.0],
+      ["Виноград", 67, 0.6, 0.2, 16.0],
+      ["Бананы", 89, 1.1, 0.3, 20.2],
+    ]],
+    ["Рыба и морепродукты", [
+      ["Минтай", 72, 15.9, 0.9, 0.0],
+      ["Треска", 82, 17.8, 0.7, 0.0],
+      ["Судак", 84, 18.4, 1.1, 0.0],
+      ["Хек", 86, 16.6, 2.2, 0.0],
+      ["Тилапия", 96, 20.1, 1.7, 0.0],
+      ["Тунец (жёлтоперый)", 109, 24.4, 0.5, 0.0],
+      ["Форель радужная", 141, 19.9, 6.2, 0.0],
+      ["Сельдь атлантическая", 158, 18.0, 9.0, 0.0],
+      ["Скумбрия атлантическая", 205, 18.6, 13.9, 0.0],
+      ["Лосось/сёмга (выращ.)", 208, 20.4, 13.4, 0.0],
+      ["Креветки", 85, 20.1, 0.5, 0.0],
+      ["Кальмар", 92, 15.6, 1.4, 3.1],
+      ["Мидии", 86, 11.9, 2.2, 3.7],
+      ["Гребешки", 69, 12.1, 0.5, 3.2],
+      ["Осьминог", 82, 14.9, 1.0, 2.2],
+      ["Краб (мясо)", 84, 18.3, 0.6, 0.0],
+      ["Устрицы", 79, 9.5, 2.3, 4.9],
+    ]],
+    ["Яйца и молочные продукты", [
+      ["Яйцо куриное (целое)", 143, 12.6, 9.5, 0.7],
+      ["Яичный белок", 52, 10.9, 0.2, 0.7],
+      ["Яичный желток", 322, 15.9, 26.5, 3.6],
+      ["Творог обезжиренный 0–0,5%", 71, 16.5, 0.3, 1.3],
+      ["Творог 5%", 121, 17.2, 5.0, 1.8],
+      ["Творог 9%", 159, 16.7, 9.0, 2.0],
+      ["Греческий йогурт 0%", 59, 10.3, 0.4, 3.6],
+      ["Кефир 1%", 40, 3.0, 1.0, 4.0],
+      ["Кефир 2,5%", 50, 2.9, 2.5, 4.0],
+      ["Молоко 1,5%", 44, 3.0, 1.5, 4.7],
+      ["Молоко 3,2%", 60, 2.9, 3.2, 4.7],
+      ["Моцарелла (полужирная)", 254, 24.3, 15.9, 2.8],
+      ["Сыр твёрдый (Гауда)", 356, 25.0, 27.4, 2.2],
+    ]],
+    ["Крупы, бобовые, хлеб (сухие)", [
+      ["Овсяные хлопья", 379, 13.2, 6.5, 67.7],
+      ["Гречка", 343, 13.3, 3.4, 71.5],
+      ["Рис белый", 365, 7.1, 0.7, 80.0],
+      ["Макароны", 371, 13.0, 1.5, 74.7],
+      ["Булгур", 342, 12.3, 1.3, 75.9],
+      ["Киноа", 368, 14.1, 6.1, 64.2],
+      ["Чечевица", 352, 24.6, 1.1, 63.4],
+      ["Нут", 378, 20.5, 6.0, 62.9],
+      ["Фасоль красная", 333, 23.6, 0.8, 60.0],
+      ["Хлеб пшеничный", 266, 8.9, 3.3, 50.6],
+      ["Хлеб ржаной", 259, 8.5, 3.3, 48.3],
+    ]],
+    ["Орехи, масла, авокадо", [
+      ["Авокадо", 160, 2.0, 14.7, 8.5],
+      ["Грецкий орех", 654, 15.2, 65.2, 13.7],
+      ["Миндаль", 579, 21.2, 49.9, 21.6],
+      ["Арахис", 567, 25.8, 49.2, 16.1],
+      ["Кешью", 553, 18.2, 43.9, 30.2],
+      ["Арахисовая паста", 588, 25.1, 50.4, 20.0],
+      ["Оливковое масло", 884, 0.0, 100.0, 0.0],
+      ["Сливочное масло 82,5%", 717, 0.9, 81.0, 0.1],
+    ]],
+  ];
+
+  function renderRef(filter) {
+    const list = el('refList');
+    list.innerHTML = '';
+    const q = (filter || '').trim().toLowerCase();
+    FOODS.forEach(([cat, items]) => {
+      const matches = items.filter(i => !q || i[0].toLowerCase().includes(q));
+      if (!matches.length) return;
+      const catEl = document.createElement('div');
+      catEl.className = 'ref-cat';
+      catEl.textContent = cat;
+      list.appendChild(catEl);
+      matches.forEach(([name, cal, p, f, c]) => {
+        const row = document.createElement('div');
+        row.className = 'ref-item';
+        row.innerHTML = `<span class="name">${name}</span><span class="macros">${cal} ккал · Б${p} Ж${f} У${c}</span>`;
+        row.addEventListener('click', () => {
+          el('addCal').value = cal;
+          el('addP').value = p;
+          el('addF').value = f;
+          el('addC').value = c;
+          document.getElementById('refCard').removeAttribute('open');
+          el('addCal').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+        list.appendChild(row);
+      });
+    });
+  }
+  renderRef('');
+  el('refSearch').addEventListener('input', (e) => renderRef(e.target.value));
+})();
+</script>
+</body>
+</html>
